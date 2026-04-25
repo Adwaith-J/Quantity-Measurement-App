@@ -8,7 +8,7 @@ public class Length {
     // ================= ENUM =================
     public enum LengthUnit {
         FEET(12.0),
-        INCHES(1.0),           // BASE UNIT
+        INCHES(1.0),        // BASE UNIT
         YARDS(36.0),
         CENTIMETERS(0.393701);
 
@@ -37,28 +37,37 @@ public class Length {
 
     // ================= BASE CONVERSION =================
     private double toBase() {
-        return value * unit.getFactor(); // convert to inches
+        return value * unit.getFactor(); // → inches
     }
 
-    // ================= BASE → TARGET =================
     private double fromBase(double baseValue, LengthUnit targetUnit) {
         return baseValue / targetUnit.getFactor();
     }
 
-    // ================= ADD METHOD (UC6 CORE) =================
-    public Length add(Length other) {
+    // ================= UC7 CORE =================
+    public Length add(Length other, LengthUnit targetUnit) {
 
         if (other == null) {
-            throw new IllegalArgumentException("Cannot add null");
+            throw new IllegalArgumentException("Other length cannot be null");
         }
 
-        // Convert both to base unit (inches)
+        if (targetUnit == null) {
+            throw new IllegalArgumentException("Target unit cannot be null");
+        }
+
+        // Convert both to base (inches)
         double sumBase = this.toBase() + other.toBase();
 
-        // Convert back to THIS unit
-        double result = fromBase(sumBase, this.unit);
+        // Convert to target unit
+        double result = fromBase(sumBase, targetUnit);
 
-        return new Length(round(result), this.unit);
+        return new Length(round(result), targetUnit);
+    }
+
+    // ================= OPTIONAL UC6 SUPPORT =================
+    // (kept for backward compatibility)
+    public Length add(Length other) {
+        return add(other, this.unit);
     }
 
     // ================= ROUND =================
@@ -72,31 +81,28 @@ public class Length {
         return String.format("%.2f %s", value, unit);
     }
 
-    // ================= MAIN (DEMO) =================
+    // ================= MAIN =================
     public static void main(String[] args) {
 
-        System.out.println("=== UC6 - Length Addition ===\n");
+        System.out.println("=== UC7 - Addition with Target Unit ===\n");
 
-        Length l1 = new Length(1.0, LengthUnit.FEET);
-        Length l2 = new Length(12.0, LengthUnit.INCHES);
+        Length a = new Length(1.0, LengthUnit.FEET);
+        Length b = new Length(12.0, LengthUnit.INCHES);
 
-        System.out.println("1 ft + 12 inches = " + l1.add(l2));
+        System.out.println("Feet result: " + a.add(b, LengthUnit.FEET));
+        System.out.println("Inches result: " + a.add(b, LengthUnit.INCHES));
+        System.out.println("Yards result: " + a.add(b, LengthUnit.YARDS));
 
-        Length l3 = new Length(12.0, LengthUnit.INCHES);
-        Length l4 = new Length(1.0, LengthUnit.FEET);
+        Length c = new Length(1.0, LengthUnit.YARDS);
+        Length d = new Length(3.0, LengthUnit.FEET);
 
-        System.out.println("12 inches + 1 ft = " + l3.add(l4));
+        System.out.println("Yard + Feet → Yards: " + c.add(d, LengthUnit.YARDS));
 
-        Length l5 = new Length(1.0, LengthUnit.YARDS);
-        Length l6 = new Length(3.0, LengthUnit.FEET);
+        Length e = new Length(2.54, LengthUnit.CENTIMETERS);
+        Length f = new Length(1.0, LengthUnit.INCHES);
 
-        System.out.println("1 yard + 3 ft = " + l5.add(l6));
+        System.out.println("CM + Inch → CM: " + e.add(f, LengthUnit.CENTIMETERS));
 
-        Length l7 = new Length(2.54, LengthUnit.CENTIMETERS);
-        Length l8 = new Length(1.0, LengthUnit.INCHES);
-
-        System.out.println("2.54 cm + 1 inch = " + l7.add(l8));
-
-        System.out.println("\nUC6 completed...");
+        System.out.println("\nUC7 completed...");
     }
 }
